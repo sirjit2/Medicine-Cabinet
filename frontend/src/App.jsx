@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AppContext } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -10,12 +10,13 @@ import Timeline from './pages/Timeline';
 import Reports from './pages/Reports';
 import LandingPage from './pages/LandingPage';
 import SignIn from './pages/auth/SignIn';
+import SignUp from './pages/auth/SignUp';
 import Toast from './components/Toast';
 import './App.css';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login'
+  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login' | 'register'
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toasts, setToasts] = useState([]);
@@ -81,6 +82,11 @@ function App() {
     { id: 4, date: '2024-06-18', symptom: 'Headache', severity: 2, linkedMeds: [2], notes: '' },
   ]);
 
+  // Always start a new auth view at the top of the page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [authView]);
+
   const addToast = (message, type = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -112,16 +118,24 @@ function App() {
   if (!isLoggedIn) {
     return (
       <AppContext.Provider value={appContextValue}>
-        {authView === 'login' ? (
+        {authView === 'login' && (
           <SignIn
             onSuccess={() => { setIsLoggedIn(true); setAuthView('landing'); }}
             onBack={() => setAuthView('landing')}
-            onSwitch={() => setAuthView('landing')}
+            onSwitch={() => setAuthView('register')}
           />
-        ) : (
+        )}
+        {authView === 'register' && (
+          <SignUp
+            onSuccess={() => { setIsLoggedIn(true); setAuthView('landing'); }}
+            onBack={() => setAuthView('landing')}
+            onSwitch={() => setAuthView('login')}
+          />
+        )}
+        {authView === 'landing' && (
           <LandingPage
-            onLogin={() => setIsLoggedIn(true)}
             onSignIn={() => setAuthView('login')}
+            onSignUp={() => setAuthView('register')}
           />
         )}
         <Toast toasts={toasts} />

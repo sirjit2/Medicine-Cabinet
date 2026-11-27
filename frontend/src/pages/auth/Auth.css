@@ -176,3 +176,26 @@
   .au *, .au *::before, .au *::after { animation: none !important; transition-duration: 0.01ms !important; }
   .au-form > *, .au-head, .au-points li { opacity: 1 !important; transform: none !important; }
 }
+
+/* ───────── Sign up extras ───────── */
+.au-roles { border: none; margin: 0; padding: 0; min-width: 0; }
+.au-roles legend { font-size: 0.88rem; font-weight: 600; color: var(--ink); margin-bottom: 10px; padding: 0; }
+.au-role-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.au-role { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; border: 1.5px solid var(--line); border-radius: 14px; background: #fff; cursor: pointer; font-size: 0.86rem; font-weight: 600; color: var(--muted); transition: border-color 0.2s, background 0.2s, color 0.2s, transform 0.3s var(--ease), box-shadow 0.3s; }
+.au-role input { position: absolute; opacity: 0; width: 0; height: 0; }
+.au-role:hover { border-color: #b9ccc8; transform: translateY(-2px); }
+.au-role.is-on { border-color: var(--teal); background: var(--teal-50); color: var(--teal); box-shadow: 0 0 0 4px rgba(15, 123, 108, 0.1); }
+.au-role:has(input:focus-visible) { outline: 2px solid var(--teal); outline-offset: 3px; }
+
+.au-pw-wrap { display: grid; gap: 10px; }
+.au-meter { display: flex; align-items: center; gap: 12px; }
+.au-meter-bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 120px; flex-shrink: 0; }
+.au-meter-bars i { height: 5px; border-radius: 999px; background: #e3ecea; transition: background 0.3s; }
+.au-meter-label { font-size: 0.8rem; color: var(--muted); }
+.au-meter.s-0 .au-meter-bars i:nth-child(1) { background: #e07a7a; }
+.au-meter.s-1 .au-meter-bars i:nth-child(-n+1) { background: #e07a7a; }
+.au-meter.s-2 .au-meter-bars i:nth-child(-n+2) { background: #e6a23c; }
+.au-meter.s-3 .au-meter-bars i:nth-child(-n+3) { background: #7cc47f; }
+.au-meter.s-4 .au-meter-bars i { background: var(--teal); }
+.au-meter.s-4 .au-meter-label { color: var(--teal); font-weight: 600; }
+.au-error--block { margin-top: 8px; }
