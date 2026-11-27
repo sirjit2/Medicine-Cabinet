@@ -1,1189 +1,880 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useTheme } from '../context/ThemeContext';
+import { useState, useEffect, useRef } from 'react';
 import './LandingPage.css';
 
 /* ═══════════════════════════════════════════════════════════════
-   SVG ICON LIBRARY
-   ───────────────────────────────────────────────────────────────
-   A collection of reusable SVG icon components used throughout
-   the landing page. Each icon accepts standard SVG props (width,
-   height, style, etc.) and renders an inline SVG element.
+   ICONS
    ═══════════════════════════════════════════════════════════════ */
-const I = {
-  /* Pill/capsule icon — represents medications */
-  Pill: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" />
-      <path d="m8.5 8.5 7 7" />
-    </svg>
-  ),
-  /* Shield with checkmark — represents safety & security */
-  Shield: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <polyline points="9 12 11 14 15 10" />
-    </svg>
-  ),
-  /* Warning triangle — represents alerts & interactions */
-  Warn: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-      <line x1="12" y1="9" x2="12" y2="13" />
-      <line x1="12" y1="17" x2="12.01" y2="17" />
-    </svg>
-  ),
-  /* Activity/heartbeat line — represents health tracking */
-  Activity: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-    </svg>
-  ),
-  /* File/document icon — represents reports */
-  File: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-      <polyline points="14 2 14 8 20 8" />
-      <line x1="16" y1="13" x2="8" y2="13" />
-      <line x1="16" y1="17" x2="8" y2="17" />
-    </svg>
-  ),
-  /* Group of users — represents caregivers & patients */
-  Users: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-    </svg>
-  ),
-  /* Clock — represents scheduling & timelines */
-  Clock: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
-  ),
-  /* Lock — represents data privacy */
-  Lock: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="11" width="18" height="11" rx="2" />
-      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-    </svg>
-  ),
-  /* Right arrow — used for CTA buttons */
-  Arrow: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
-  ),
-  /* Sun — light theme toggle */
-  Sun: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="5" />
-      <line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" />
-      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-      <line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" />
-      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" /><line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-    </svg>
-  ),
-  /* Moon — dark theme toggle */
-  Moon: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-    </svg>
-  ),
-  /* Checkmark — used for trust badges & confirmation */
-  Check: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  ),
-  /* Star — used for ratings */
-  Star: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="currentColor">
-      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-    </svg>
-  ),
-  /* Database — represents FDA data connection */
-  Database: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-    </svg>
-  ),
-  /* Heart — represents free / health */
-  Heart: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-    </svg>
-  ),
-  /* Lightning bolt — represents speed & quick actions */
-  Zap: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-    </svg>
-  ),
-  /* Right chevron — used for navigation arrows */
-  ChevR: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="9 18 15 12 9 6" />
-    </svg>
-  ),
-  /* Medical cross — represents healthcare */
-  Cross: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M9 2h6v7h7v6h-7v7H9v-7H2V9h7V2z" />
-    </svg>
-  ),
-  /* Stethoscope — represents doctors */
-  Stethoscope: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3" />
-      <path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4" />
-      <circle cx="20" cy="10" r="2" />
-    </svg>
-  ),
-  /* Clipboard — represents side effect logging */
-  Clipboard: (p) => (
-    <svg {...p} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
-      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
-    </svg>
-  ),
+const base = {
+  viewBox: '0 0 24 24',
+  fill: 'none',
+  stroke: 'currentColor',
+  strokeWidth: 1.8,
+  strokeLinecap: 'round',
+  strokeLinejoin: 'round',
+  'aria-hidden': true,
 };
 
+const icon = (children, extra = {}) => (p) => (
+  <svg {...base} {...extra} {...p}>{children}</svg>
+);
+
+const I = {
+  Pill: icon(<><path d="m10.5 20.5 10-10a4.95 4.95 0 1 0-7-7l-10 10a4.95 4.95 0 1 0 7 7Z" /><path d="m8.5 8.5 7 7" /></>),
+  Shield: icon(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><polyline points="9 12 11 14 15 10" /></>),
+  Activity: icon(<polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />),
+  File: icon(<><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" y1="13" x2="8" y2="13" /><line x1="16" y1="17" x2="8" y2="17" /></>),
+  Warn: icon(<><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" /></>),
+  Check: icon(<polyline points="20 6 9 17 4 12" />, { strokeWidth: 2.5 }),
+  Cross: icon(<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>, { strokeWidth: 2.4 }),
+  Arrow: icon(<><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></>, { strokeWidth: 2.2 }),
+  Clock: icon(<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>),
+  Bell: icon(<><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></>),
+  Users: icon(<><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></>),
+  Lock: icon(<><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></>),
+  Heart: icon(<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />),
+  Stethoscope: icon(<><path d="M4.8 2.3A.3.3 0 1 0 5 2H4a2 2 0 0 0-2 2v5a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6V4a2 2 0 0 0-2-2h-1a.2.2 0 1 0 .3.3" /><path d="M8 15v1a6 6 0 0 0 6 6v0a6 6 0 0 0 6-6v-4" /><circle cx="20" cy="10" r="2" /></>),
+  Download: icon(<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>),
+  Calendar: icon(<><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></>),
+  Plus: icon(<><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></>, { strokeWidth: 2.2 }),
+};
 
 /* ═══════════════════════════════════════════════════════════════
-   CUSTOM HOOK: useInView
-   ───────────────────────────────────────────────────────────────
-   Uses IntersectionObserver to detect when a DOM element enters
-   the viewport. Returns a [ref, isInView] tuple. Once the element
-   is visible, it stays "in view" permanently (one-shot trigger)
-   to avoid re-animating on scroll back.
-
-   @param {number} threshold - How much of the element must be
-     visible (0 to 1) before triggering. Default 0.12 (12%).
-   @returns {[React.RefObject, boolean]}
+   CONTENT
    ═══════════════════════════════════════════════════════════════ */
-function useInView(threshold = 0.12) {
-  const ref = useRef(null);
-  const [inView, setInView] = useState(false);
+const NAV_LINKS = [
+  { id: 'features', label: 'Features' },
+  { id: 'product', label: 'Product' },
+  { id: 'audience', label: 'Who it\'s for' },
+  { id: 'how', label: 'How it works' },
+  { id: 'security', label: 'Security' },
+  { id: 'faq', label: 'FAQ' },
+];
+const SECTION_IDS = NAV_LINKS.map((l) => l.id);
 
-  useEffect(() => {
-    if (!ref.current) return;
-
-    /* Create an observer that fires once and disconnects */
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setInView(true);
-          observer.disconnect(); // Only trigger once
-        }
-      },
-      { threshold }
-    );
-
-    observer.observe(ref.current);
-    return () => observer.disconnect();
-  }, [threshold]);
-
-  return [ref, inView];
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
-   CUSTOM HOOK: useCountUp
-   ───────────────────────────────────────────────────────────────
-   Animates a number counting up from 0 to `target` using
-   requestAnimationFrame. Uses cubic ease-out easing for a smooth
-   deceleration effect. Only starts when `started` is true.
-
-   @param {number} target   - The final number to count up to
-   @param {boolean} started - Whether counting should begin
-   @param {number} duration - Animation duration in ms (default 2400)
-   @returns {number}        - The current animated value
-   ═══════════════════════════════════════════════════════════════ */
-function useCountUp(target, started, duration = 2400) {
-  const [val, setVal] = useState(0);
-
-  useEffect(() => {
-    if (!started) return;
-
-    let rafId;
-    let startTime = null;
-
-    /**
-     * Animation frame callback — calculates progress with
-     * cubic ease-out and updates the displayed value
-     */
-    const step = (timestamp) => {
-      if (!startTime) startTime = timestamp;
-
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3); // Cubic ease-out
-      setVal(Math.floor(eased * target));
-
-      if (progress < 1) {
-        rafId = requestAnimationFrame(step);
-      }
-    };
-
-    rafId = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafId);
-  }, [target, started, duration]);
-
-  return val;
-}
-
-
-/* ═══════════════════════════════════════════════════════════════
-   STATIC DATA CONSTANTS
-   ───────────────────────────────────────────────────────────────
-   All the static content used throughout the landing page is
-   defined here to keep the component clean and make content
-   updates easy without touching the JSX structure.
-   ═══════════════════════════════════════════════════════════════ */
-
-/**
- * TICKER — Auto-scrolling trust badges shown below the navbar.
- * These rotate infinitely to build social proof.
- */
-const TICKER = [
-  '10,000+ Active Patients',
-  'FDA-Linked Drug Database',
-  '50,000+ Medications Tracked',
-  'End-to-End Encrypted',
-  '120,000+ Interactions Checked',
-  'Caregiver Mode Included',
-  'Doctor-Ready PDF Reports',
-  '99.9% Uptime',
-  'Free for Patients',
+const CAPABILITIES = [
+  { Icon: I.Pill, label: 'Medication tracking' },
+  { Icon: I.Shield, label: 'Interaction checks' },
+  { Icon: I.Activity, label: 'Side-effect log' },
+  { Icon: I.File, label: 'Doctor reports' },
+  { Icon: I.Users, label: 'Caregiver sharing' },
+  { Icon: I.Lock, label: 'Private by default' },
 ];
 
-/**
- * FEATURES — The 6 core product features displayed in a bento grid.
- * Each has an icon, title, description, and a green accent color.
- */
 const FEATURES = [
+  { Icon: I.Pill, title: 'Track medications', desc: 'Name, strength, dose, schedule, start date and prescriber for every prescription, over-the-counter drug and supplement, in one organised list.' },
+  { Icon: I.Bell, title: 'Dose reminders', desc: 'Get reminded when a dose is due and mark it taken in one tap. Skipped doses are recorded so your history stays honest.' },
+  { Icon: I.Shield, title: 'Check interactions', desc: 'Every new medication is compared against your whole list. Warnings are rated by severity and explained in plain language.' },
+  { Icon: I.Activity, title: 'Log side effects', desc: 'Note symptoms with severity and timing, then see which medication they line up with over days and weeks.' },
+  { Icon: I.Clock, title: 'Dosage timeline', desc: 'A clear visual history of what you took and when, so adherence patterns and gaps are easy to spot.' },
+  { Icon: I.File, title: 'Health reports', desc: 'Generate a printable summary of medications, allergies, side effects and adherence to bring to any appointment.' },
+  { Icon: I.Users, title: 'Caregiver sharing', desc: 'Help a parent, partner or child stay on track by managing a shared list, with you in control of who can see what.' },
+  { Icon: I.Download, title: 'Export anything', desc: 'Download your records whenever you like, or delete everything with a single action. Your data is yours to take.' },
+];
+
+const SHOWCASE = [
+  { id: 'schedule', title: 'Today\'s schedule', desc: 'See every dose due today, mark them off, and watch your progress for the day fill up.', Icon: I.Calendar },
+  { id: 'interactions', title: 'Interaction alerts', desc: 'Severity-rated warnings appear the moment two medications overlap, with clear next steps.', Icon: I.Shield },
+  { id: 'effects', title: 'Side-effect log', desc: 'Record how you feel and spot patterns between symptoms and the medicines you take.', Icon: I.Activity },
+  { id: 'report', title: 'Doctor report', desc: 'One tidy page with everything your clinician needs, ready to print or save.', Icon: I.File },
+];
+
+const AUDIENCE = [
   {
-    Icon: I.Pill,
-    label: 'Medication Log',
-    desc: 'Every prescription and supplement in one place — dosage, frequency, start date, prescribing doctor.',
-    color: '#059669',
-    glow: 'rgba(5,150,105,0.10)',
+    Icon: I.Heart, who: 'Patients', tag: 'Managing your own medicines',
+    points: ['Never wonder whether you took a dose', 'Catch risky combinations early', 'Walk into appointments prepared'],
   },
   {
-    Icon: I.Warn,
-    label: 'Interaction Checker',
-    desc: 'Powered by RxNorm & OpenFDA. Catch dangerous drug combinations before they affect you.',
-    color: '#047857',
-    glow: 'rgba(4,120,87,0.10)',
+    Icon: I.Users, who: 'Caregivers', tag: 'Looking after someone else',
+    points: ['Keep a loved one\'s list in one place', 'Know what has been taken today', 'Share one clear summary with their doctor'],
   },
   {
-    Icon: I.Activity,
-    label: 'Side Effect Tracker',
-    desc: 'Log symptoms daily and surface correlations between your medications and how you feel.',
-    color: '#10b981',
-    glow: 'rgba(16,185,129,0.10)',
-  },
-  {
-    Icon: I.Clock,
-    label: 'Dosage Timeline',
-    desc: 'Visual adherence history — charts, streaks, and weekly breakdowns in one clear view.',
-    color: '#059669',
-    glow: 'rgba(5,150,105,0.10)',
-  },
-  {
-    Icon: I.File,
-    label: 'Doctor Summaries',
-    desc: 'One-click PDF report for your next appointment. Your doctor gets the full picture instantly.',
-    color: '#047857',
-    glow: 'rgba(4,120,87,0.10)',
-  },
-  {
-    Icon: I.Users,
-    label: 'Caregiver Mode',
-    desc: "Remotely manage a family member's medications. Real support for a real everyday challenge.",
-    color: '#10b981',
-    glow: 'rgba(16,185,129,0.10)',
+    Icon: I.Stethoscope, who: 'Clinicians', tag: 'Seeing patients who use it',
+    points: ['A clean medication summary on arrival', 'Documented side effects and timing', 'Fewer gaps in the medication history'],
   },
 ];
 
-/**
- * HOW — The 4-step "How It Works" process flow.
- * Step numbers (01-04) are displayed as large gradient text.
- */
-const HOW = [
-  { n: '01', title: 'Add Your Medications', desc: 'Name, dosage, frequency, doctor. Under a minute per medication. We handle the complexity.' },
-  { n: '02', title: 'Get Instant Alerts', desc: 'Every new medication is cross-checked against your full list using live FDA interaction data.' },
-  { n: '03', title: 'Track & Spot Patterns', desc: 'Log symptoms, mark doses taken, and watch adherence trends build over weeks and months.' },
-  { n: '04', title: 'Share With Your Doctor', desc: 'Export a clean summary before any appointment — no more trying to recall everything on the spot.' },
+const STEPS = [
+  { title: 'Add your medications', desc: 'Enter name, dose and schedule once. Edit, pause or remove any medication whenever things change.' },
+  { title: 'Get safety checks', desc: 'We compare each new medication with your list and flag interactions as soon as they overlap.' },
+  { title: 'Track every day', desc: 'Mark doses taken, log how you feel, and build a record that shows what is really happening.' },
+  { title: 'Share a summary', desc: 'Print or save a clear report to bring to your next appointment, so nothing is left to memory.' },
 ];
 
-/**
- * TESTIMONIALS — User reviews with ratings, displayed in a 3-column grid.
- * Each has a colored top bar for visual variety within the green palette.
- */
-const TESTIMONIALS = [
-  {
-    name: 'Margaret T.',
-    role: 'Patient · Managing 8 medications',
-    text: "This is the first app that made me feel like I actually understand what I'm taking. The interaction alerts have genuinely helped me.",
-    rating: 5,
-    color: '#059669',
-  },
-  {
-    name: 'Dr. Aisha K.',
-    role: 'General Practitioner · Boston',
-    text: 'My patients who arrive with a Medicine Cabinet summary are the most informed I see. The doctor report is genuinely useful in practice.',
-    rating: 5,
-    color: '#047857',
-  },
-  {
-    name: 'Carlos R.',
-    role: 'Caregiver · Managing his father',
-    text: "Managing my father's 12 medications from another city was overwhelming. Now I see everything from my phone. It changed everything.",
-    rating: 5,
-    color: '#10b981',
-  },
+const SECURITY = [
+  { Icon: I.Lock, title: 'Encrypted sign-in', desc: 'Passwords are never stored in plain text.' },
+  { Icon: I.Shield, title: 'Private by default', desc: 'Your records are visible only to you unless you choose to share.' },
+  { Icon: I.Users, title: 'You control sharing', desc: 'Caregiver access is something you grant and can withdraw.' },
+  { Icon: I.Download, title: 'Export any time', desc: 'Take a full copy of your data whenever you want.' },
+  { Icon: I.Cross, title: 'Delete in one click', desc: 'Remove all of your data permanently, no questions asked.' },
+  { Icon: I.Heart, title: 'Never sold', desc: 'Your health information is not a product.' },
 ];
 
-/**
- * FLOATING_ICONS — Background decorative icons that float gently
- * behind the hero section to create depth and a medical atmosphere.
- * Each has a position, size, opacity, and animation delay.
- */
-const FLOATING_ICONS = [
-  { Icon: I.Cross, size: 28, top: '12%', left: '8%', opacity: 0.06, delay: '0s' },
-  { Icon: I.Pill, size: 22, top: '25%', right: '12%', opacity: 0.05, delay: '1s' },
-  { Icon: I.Heart, size: 20, top: '60%', left: '5%', opacity: 0.04, delay: '2s' },
-  { Icon: I.Shield, size: 24, top: '75%', right: '8%', opacity: 0.06, delay: '0.5s' },
-  { Icon: I.Activity, size: 26, top: '40%', left: '15%', opacity: 0.04, delay: '1.5s' },
-  { Icon: I.Stethoscope, size: 22, top: '18%', right: '25%', opacity: 0.05, delay: '2.5s' },
-  { Icon: I.Clipboard, size: 20, top: '85%', left: '20%', opacity: 0.04, delay: '3s' },
-  { Icon: I.Cross, size: 18, top: '50%', right: '20%', opacity: 0.03, delay: '1.8s' },
+const COMPARE_COLS = ['Paper list', 'Notes app', 'Medicine Cabinet'];
+const COMPARE_ROWS = [
+  { label: 'Keeps all medications in one place', v: [true, true, true] },
+  { label: 'Reminds you when a dose is due', v: [false, false, true] },
+  { label: 'Checks for drug interactions', v: [false, false, true] },
+  { label: 'Tracks side effects against medications', v: [false, false, true] },
+  { label: 'Shows adherence history', v: [false, false, true] },
+  { label: 'Prints a clean summary for your doctor', v: [false, false, true] },
+  { label: 'Lets a caregiver help', v: [false, false, true] },
 ];
 
+const FAQ = [
+  { q: 'Does Medicine Cabinet replace advice from my doctor or pharmacist?', a: 'No. It is an organisation and awareness tool. Interaction warnings are informational, so always speak to a doctor or pharmacist before starting, stopping or changing any medication.' },
+  { q: 'Who can see my medication data?', a: 'Only you. Your records are private by default, and the only way anyone else sees them is if you choose to share a report or give a caregiver access.' },
+  { q: 'How do interaction checks work?', a: 'When you add a medication, it is compared against everything already on your list. If a combination is known to cause problems, you see a severity-rated alert with a plain-language explanation and a suggested next step.' },
+  { q: 'Can I manage medications for someone else?', a: 'Yes. Caregiver mode lets you keep a family member\'s list, record doses and prepare their summary for appointments, from wherever you are.' },
+  { q: 'What goes into the doctor report?', a: 'Your current medications and doses, known allergies, logged side effects and your recent adherence. It is formatted as a single clear page you can print or save.' },
+  { q: 'Can I take my data with me or delete it?', a: 'Yes, both. You can export your records at any time, and you can delete all of your data in one action.' },
+  { q: 'Does it cost anything to start?', a: 'Creating an account is free and takes about two minutes. You can add your medications and see your first safety check right away.' },
+];
+
+const FOOTER_COLS = [
+  { title: 'Product', links: [['Features', '#features'], ['Product tour', '#product'], ['How it works', '#how'], ['Security', '#security']] },
+  { title: 'Who it\'s for', links: [['Patients', '#audience'], ['Caregivers', '#audience'], ['Clinicians', '#audience']] },
+  { title: 'Support', links: [['FAQ', '#faq'], ['Contact us', '#'], ['Help centre', '#']] },
+  { title: 'Legal', links: [['Privacy policy', '#'], ['Terms of service', '#'], ['Medical disclaimer', '#disclaimer']] },
+];
 
 /* ═══════════════════════════════════════════════════════════════
-   LANDING PAGE COMPONENT
-   ───────────────────────────────────────────────────────────────
-   The main landing page for Medicine Cabinet. This is the first
-   page users see before logging in. It includes:
-
-   1. Fixed navbar with logo, nav links, theme toggle, and LOGIN
-   2. Animated ticker bar with trust signals
-   3. Full-screen hero with headline, CTA, and floating stat cards
-   4. Animated statistics counters section
-   5. Feature bento grid (6 features)
-   6. Dashboard showcase with browser mockup
-   7. "How It Works" 4-step process
-   8. Testimonials from patients/doctors
-   9. Final CTA section
-   10. Footer with links
-
-   @param {Function} onLogin - Callback when user clicks login/get started
+   HOOKS
    ═══════════════════════════════════════════════════════════════ */
-const LandingPage = ({ onLogin }) => {
-  /* ── Access theme context for dark/light mode toggle ── */
-  const { theme, toggleTheme } = useTheme();
 
-  /* ── Login modal state ── */
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-
-  /* ── Animation & interaction state ── */
-  const [loaded, setLoaded] = useState(false);         // Triggers hero entrance animation
-  const [scrollY, setScrollY] = useState(0);            // Current scroll position for parallax
-  const [navScrolled, setNavScrolled] = useState(false); // Whether navbar should be opaque
-
-  /* ── Refs for sections ── */
-  const heroRef = useRef(null);
-
-  /* ── IntersectionObserver hooks — one per animated section ── */
-  const [statsRef, statsInView] = useInView(0.3);
-  const [featRef, featInView] = useInView(0.08);
-  const [howRef, howInView] = useInView(0.08);
-  const [testRef, testInView] = useInView(0.08);
-  const [ctaRef, ctaInView] = useInView(0.2);
-
-  /* ── Animated counter values (only start counting when section is in view) ── */
-  const users = useCountUp(10000, statsInView);
-  const meds = useCountUp(50000, statsInView);
-  const checks = useCountUp(120000, statsInView);
-
-  /**
-   * handleScroll — Updates scroll position state for parallax effects
-   * and determines if the navbar should switch to its scrolled style.
-   * Uses useCallback to prevent re-creating the function on each render.
-   */
-  const handleScroll = useCallback(() => {
-    setScrollY(window.scrollY);
-    setNavScrolled(window.scrollY > 40);
-  }, []);
-
-  /**
-   * Initial setup effect — triggers the hero entrance animation
-   * after a short delay and attaches the scroll listener for
-   * parallax and navbar effects.
-   */
+/** Adds `.in` to every [data-reveal] element once it scrolls into view. */
+function useScrollReveal(rootRef) {
   useEffect(() => {
-    const timer = setTimeout(() => setLoaded(true), 100);
+    const root = rootRef.current;
+    if (!root) return undefined;
+    const els = root.querySelectorAll('[data-reveal]');
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced || !('IntersectionObserver' in window)) {
+      els.forEach((el) => el.classList.add('in'));
+      return undefined;
+    }
 
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [handleScroll]);
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('in');
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, [rootRef]);
+}
 
-  /**
-   * submit — Handles both login and registration form submission.
-   * Prevents default form behavior and triggers the onLogin callback
-   * which switches the app to the authenticated dashboard view.
-   */
-  const submit = (e) => {
-    e.preventDefault();
-    onLogin();
-  };
+/** Tracks which section is currently centred in the viewport. */
+function useActiveSection(ids) {
+  const [active, setActive] = useState('');
+  useEffect(() => {
+    if (!('IntersectionObserver' in window)) return undefined;
+    const io = new IntersectionObserver(
+      (entries) => entries.forEach((e) => e.isIntersecting && setActive(e.target.id)),
+      { rootMargin: '-45% 0px -50% 0px' }
+    );
+    ids.forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) io.observe(el);
+    });
+    return () => io.disconnect();
+  }, [ids]);
+  return active;
+}
 
-  /**
-   * openLogin — Opens the login modal and sets it to sign-in mode.
-   * Called when user clicks "Sign In" in the navbar.
-   */
-  const openLogin = () => {
-    setAuthMode('login');
-    setShowLoginModal(true);
-  };
+/* ═══════════════════════════════════════════════════════════════
+   PRODUCT SHOWCASE PANELS (illustrative example data)
+   ═══════════════════════════════════════════════════════════════ */
+const DOSES = [
+  { name: 'Metformin 500mg', meta: '8:00 AM · With breakfast', state: 'taken' },
+  { name: 'Atorvastatin 20mg', meta: '9:00 PM · Evening', state: 'due' },
+  { name: 'Lisinopril 10mg', meta: '2:00 PM · With water', state: 'taken' },
+  { name: 'Vitamin D 1000 IU', meta: '8:00 AM · With breakfast', state: 'taken' },
+];
 
-  /**
-   * openRegister — Opens the login modal and sets it to register mode.
-   * Called when user clicks "Get Started" in the navbar.
-   */
-  const openRegister = () => {
-    setAuthMode('register');
-    setShowLoginModal(true);
-  };
+const ALERTS = [
+  { level: 'major', label: 'Major', pair: 'Warfarin + Ibuprofen', text: 'May raise the risk of bleeding. Speak to your pharmacist before combining.' },
+  { level: 'moderate', label: 'Moderate', pair: 'Lisinopril + Potassium supplements', text: 'Potassium levels can rise. Your doctor may want to monitor this.' },
+  { level: 'minor', label: 'Minor', pair: 'Atorvastatin + Grapefruit juice', text: 'Large amounts may increase side effects. Moderation is advised.' },
+];
 
-  return (
-    <div className="lp">
+const EFFECT_DAYS = [
+  { d: 'Mon', v: 20 }, { d: 'Tue', v: 35 }, { d: 'Wed', v: 70 }, { d: 'Thu', v: 55 },
+  { d: 'Fri', v: 30 }, { d: 'Sat', v: 15 }, { d: 'Sun', v: 10 },
+];
 
-      {/* ─────────────────────────────────────────────────────────
-          FLOATING MEDICAL ICONS (Background Decoration)
-          ─────────────────────────────────────────────────────────
-          Semi-transparent medical icons float gently across the
-          background to create a healthcare atmosphere without
-          distracting from the content.
-       */}
-      <div className="lp-floating-icons" aria-hidden="true">
-        {FLOATING_ICONS.map((item, i) => (
-          <div
-            key={i}
-            className="floating-icon"
-            style={{
-              top: item.top,
-              left: item.left,
-              right: item.right,
-              opacity: item.opacity,
-              animationDelay: item.delay,
-            }}
-          >
-            <item.Icon width={item.size} height={item.size} />
+const ShowcasePanel = ({ id }) => {
+  if (id === 'schedule') {
+    return (
+      <div className="sp sp-schedule">
+        <div className="sp-head"><strong>Today</strong><span>3 of 4 taken</span></div>
+        <div className="hc-progress"><span style={{ width: '75%' }} /></div>
+        {DOSES.map((d) => (
+          <div className="hc-row" key={d.name}>
+            <div>
+              <div className="hc-name">{d.name}</div>
+              <div className="hc-meta">{d.meta}</div>
+            </div>
+            {d.state === 'taken'
+              ? <span className="tag tag--ok"><I.Check width={11} height={11} />Taken</span>
+              : <span className="tag tag--due"><span className="due-dot" />Due</span>}
           </div>
         ))}
       </div>
-
-      {/* ─────────────────────────────────────────────────────────
-          NAVBAR — Fixed top navigation bar
-          ─────────────────────────────────────────────────────────
-          Contains: Logo, navigation links, theme toggle, and
-          LOGIN button. The navbar becomes opaque and gets a subtle
-          shadow when the user scrolls down (controlled by
-          navScrolled state). LOGIN is in the navbar, NOT on the page.
-       */}
-      <header className={`lp-nav ${navScrolled ? 'lp-nav--scrolled' : ''}`}>
-        <div className="lp-nav-w">
-          {/* App logo */}
-          <div className="lp-logo">
-            <div className="logo-pill-icon">
-              <I.Pill width={16} height={16} />
+    );
+  }
+  if (id === 'interactions') {
+    return (
+      <div className="sp">
+        <div className="sp-head"><strong>Interaction check</strong><span>3 findings</span></div>
+        {ALERTS.map((a) => (
+          <div className={`alert-row alert-row--${a.level}`} key={a.pair}>
+            <span className="alert-badge">{a.label}</span>
+            <div>
+              <div className="alert-pair">{a.pair}</div>
+              <div className="alert-text">{a.text}</div>
             </div>
-            <span className="logo-text">
-              Medicine<em>Cabinet</em>
-            </span>
           </div>
+        ))}
+      </div>
+    );
+  }
+  if (id === 'effects') {
+    return (
+      <div className="sp">
+        <div className="sp-head"><strong>Symptom severity · last 7 days</strong><span>Headache</span></div>
+        <div className="bars">
+          {EFFECT_DAYS.map((b, i) => (
+            <div className="bar-col" key={b.d}>
+              <span className="bar" style={{ '--h': `${b.v}%`, '--i': i }} />
+              <span className="bar-l">{b.d}</span>
+            </div>
+          ))}
+        </div>
+        <div className="insight">
+          <I.Activity width={16} height={16} />
+          <span>Severity peaked on Wednesday, the day a new medication was started. Worth mentioning to your doctor.</span>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="sp sp-report">
+      <div className="doc">
+        <div className="doc-title">Medication summary</div>
+        <div className="doc-sub">Prepared for your appointment</div>
+        <div className="doc-line doc-line--h">Current medications</div>
+        <div className="doc-line">Metformin 500mg · twice daily</div>
+        <div className="doc-line">Lisinopril 10mg · once daily</div>
+        <div className="doc-line">Atorvastatin 20mg · evening</div>
+        <div className="doc-line doc-line--h">Allergies</div>
+        <div className="doc-line">Penicillin</div>
+        <div className="doc-line doc-line--h">Adherence · last 30 days</div>
+        <div className="doc-line">91% of doses taken on time</div>
+      </div>
+      <span className="doc-btn"><I.Download width={14} height={14} />Save as PDF</span>
+    </div>
+  );
+};
 
-          {/* Main navigation links — smooth scroll to sections */}
-          <nav className="lp-links">
-            <a href="#features">Features</a>
-            <a href="#how">How It Works</a>
-            <a href="#reviews">Reviews</a>
+/* ═══════════════════════════════════════════════════════════════
+   PAGE
+   ═══════════════════════════════════════════════════════════════ */
+const LandingPage = ({ onLogin }) => {
+  const rootRef = useRef(null);
+
+  const [showModal, setShowModal] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const [ready, setReady] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [lisinoprilTaken, setLisinoprilTaken] = useState(false);
+  const [tab, setTab] = useState(0);
+  const [tabPaused, setTabPaused] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
+
+  const active = useActiveSection(SECTION_IDS);
+  useScrollReveal(rootRef);
+
+  /* Hero entrance + navbar shadow */
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 60);
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  /* Hero card: second dose flips between Due and Taken */
+  useEffect(() => {
+    const id = setInterval(() => setLisinoprilTaken((v) => !v), 3600);
+    return () => clearInterval(id);
+  }, []);
+
+  /* Showcase auto-advance (stops once the visitor interacts) */
+  useEffect(() => {
+    if (tabPaused) return undefined;
+    const id = setInterval(() => setTab((t) => (t + 1) % SHOWCASE.length), 6000);
+    return () => clearInterval(id);
+  }, [tabPaused]);
+
+  /* Escape closes the modal and the page doesn't scroll behind it */
+  useEffect(() => {
+    if (!showModal) return undefined;
+    const onKey = (e) => e.key === 'Escape' && setShowModal(false);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [showModal]);
+
+  const openLogin = () => { setAuthMode('login'); setShowModal(true); };
+  const openRegister = () => { setAuthMode('register'); setShowModal(true); };
+  const submit = (e) => { e.preventDefault(); onLogin(); };
+  const pickTab = (i) => { setTab(i); setTabPaused(true); };
+
+  const trackPointer = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`);
+    e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`);
+  };
+
+  const takenCount = lisinoprilTaken ? 2 : 1;
+  const progress = (takenCount / 2) * 100;
+
+  return (
+    <div className={`lp ${ready ? 'is-ready' : ''}`} ref={rootRef}>
+      {/* ───────────── NAV ───────────── */}
+      <header className={`lp-nav ${scrolled ? 'lp-nav--scrolled' : ''}`}>
+        <div className="lp-nav-w">
+          <a className="lp-logo" href="#top" aria-label="Medicine Cabinet home">
+            <span className="logo-pill-icon"><I.Pill width={18} height={18} /></span>
+            <span className="logo-text">Medicine Cabinet</span>
+          </a>
+
+          <nav className="lp-links" aria-label="Primary">
+            {NAV_LINKS.map((l) => (
+              <a key={l.id} href={`#${l.id}`} className={active === l.id ? 'is-active' : ''}>{l.label}</a>
+            ))}
           </nav>
 
-          {/* Right side: theme toggle + auth buttons */}
           <div className="lp-nav-r">
-            {/* Theme toggle button (sun/moon) */}
-            <button
-              className="nav-icon-btn"
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark'
-                ? <I.Sun width={16} height={16} />
-                : <I.Moon width={16} height={16} />
-              }
-            </button>
-
-            {/* Sign In — opens the login modal */}
-            <button
-              id="nav-signin"
-              className="nav-ghost-btn"
-              onClick={openLogin}
-            >
-              Sign In
-            </button>
-
-            {/* Get Started — opens the registration modal */}
-            <button
-              id="nav-cta"
-              className="nav-cta-btn"
-              onClick={openRegister}
-            >
-              Get Started Free
-            </button>
+            <button id="nav-signin" className="nav-ghost-btn" onClick={openLogin}>Sign in</button>
+            <button id="nav-cta" className="nav-cta-btn" onClick={openRegister}>Get started</button>
           </div>
         </div>
       </header>
 
-      {/* ─────────────────────────────────────────────────────────
-          TICKER BAR — Auto-scrolling trust signals
-          ─────────────────────────────────────────────────────────
-          A thin animated bar below the navbar that continuously
-          scrolls through trust badges (user count, encryption,
-          uptime, etc.). The track is duplicated so it loops
-          seamlessly with CSS animation.
-       */}
-      <div className="lp-ticker">
-        <div className="ticker-track">
-          {[...TICKER, ...TICKER].map((item, i) => (
-            <span key={i} className="ticker-item">
-              <span className="ticker-diamond">◆</span>
-              {item}
+      {/* ───────────── HERO ───────────── */}
+      <section className="lp-hero" id="top">
+        <div className="hero-bg" aria-hidden="true">
+          <span className="blob blob-a" />
+          <span className="blob blob-b" />
+          <span className="hero-grid" />
+        </div>
+
+        <div className="lp-w hero-inner">
+          <div className="hero-left">
+            <span className="hero-badge a-in" style={{ '--d': '0ms' }}>
+              <span className="badge-dot" />
+              Secure medication management
             </span>
-          ))}
-        </div>
-      </div>
 
-      {/* ─────────────────────────────────────────────────────────
-          HERO SECTION — Full-screen above-the-fold content
-          ─────────────────────────────────────────────────────────
-          This is the most important section — the first thing
-          visitors see. It has:
-          - Animated gradient background blobs (parallax)
-          - Subtle grid pattern overlay
-          - Headline with gradient text animation
-          - Sub-headline with value proposition
-          - Two CTA buttons
-          - Trust chips (HIPAA, Encrypted, FDA, Free)
-          - Floating stat notification cards (right side)
-          - Photo strip at the bottom
-       */}
-      <section className="lp-hero" ref={heroRef}>
-        {/* Animated background — gradient blobs that drift slowly */}
-        <div className="hero-bg">
-          <div
-            className="hero-blob hero-blob-1"
-            style={{ transform: `translateY(${scrollY * 0.15}px)` }}
-          />
-          <div
-            className="hero-blob hero-blob-2"
-            style={{ transform: `translateY(${scrollY * -0.1}px)` }}
-          />
-          <div className="hero-blob hero-blob-3" />
-          {/* Subtle grid pattern — masked to fade at edges */}
-          <div className="hero-grid-lines" />
-        </div>
+            <h1 className="hero-h1">
+              <span className="h1-mask"><span className="h1-line a-in" style={{ '--d': '90ms' }}>Every medication.</span></span>
+              <span className="h1-mask"><span className="h1-line h1-accent a-in" style={{ '--d': '200ms' }}>One safe place.</span></span>
+            </h1>
 
-        <div className="lp-w">
-          <div className={`hero-inner ${loaded ? 'hero-loaded' : ''}`}>
+            <p className="hero-sub a-in" style={{ '--d': '320ms' }}>
+              Track doses, catch risky drug interactions before they happen, log side effects,
+              and share a clear health summary with your doctor. Built for patients,
+              caregivers and the clinicians who treat them.
+            </p>
 
-            {/* ── LEFT SIDE: Headlines & CTAs ── */}
-            <div className="hero-left">
-              {/* Trust badge with pulsing green dot */}
-              <div className="hero-badge">
-                <span className="hero-badge-pulse" />
-                <span>Trusted by 10,000+ patients worldwide</span>
-              </div>
-
-              {/* Main headline — each line animates in with staggered delay */}
-              <h1 className="hero-h1">
-                <span className="h1-line h1-line-1">Your complete</span>
-                <span className="h1-line h1-line-2">
-                  <span className="h1-gradient">medicine companion.</span>
-                </span>
-              </h1>
-
-              {/* Supporting text — explains the value proposition */}
-              <p className="hero-sub">
-                Medicine Cabinet gives you total clarity on your prescriptions — check dangerous
-                interactions, track side effects, and walk into every appointment fully prepared.
-                Built for patients, caregivers, and healthcare professionals.
-              </p>
-
-              {/* CTA buttons */}
-              <div className="hero-actions">
-                <button
-                  id="hero-cta"
-                  className="hero-primary-btn"
-                  onClick={openRegister}
-                >
-                  <span>Start Free — No Card Needed</span>
-                  <I.Arrow width={16} height={16} />
-                </button>
-                <button className="hero-ghost-btn">
-                  <span className="hero-play">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="white">
-                      <polygon points="2,1 9,5 2,9" />
-                    </svg>
-                  </span>
-                  Watch demo
-                </button>
-              </div>
-
-              {/* Trust chips — small badges showing key differentiators */}
-              <div className="hero-chips">
-                {[
-                  { Icon: I.Lock, t: 'HIPAA-Friendly' },
-                  { Icon: I.Shield, t: 'Encrypted' },
-                  { Icon: I.Database, t: 'FDA Data' },
-                  { Icon: I.Heart, t: 'Free Forever' },
-                ].map(({ Icon, t }, i) => (
-                  <div key={i} className="hero-chip">
-                    <Icon width={12} height={12} />
-                    {t}
-                  </div>
-                ))}
-              </div>
+            <div className="hero-actions a-in" style={{ '--d': '420ms' }}>
+              <button id="hero-cta" className="btn-primary btn-primary--lg" onClick={openRegister}>
+                Start your cabinet
+                <I.Arrow width={18} height={18} />
+              </button>
+              <a className="btn-secondary btn-secondary--lg" href="#product">Take the tour</a>
             </div>
 
-            {/* ── RIGHT SIDE: Floating notification cards ── */}
-            <div className="hero-right" id="auth-anchor">
-              {/* These 3 cards float with gentle bobbing animations
-                  to show the kind of notifications users will get */}
-              <div className="float-stat float-stat-1">
-                <div className="fs-icon" style={{ color: '#059669' }}>
-                  <I.Check width={14} height={14} />
-                </div>
-                <div>
-                  <div className="fs-title">Dose Confirmed</div>
-                  <div className="fs-sub">Metformin · 8:00 AM</div>
-                </div>
-              </div>
+            <ul className="hero-checks a-in" style={{ '--d': '520ms' }}>
+              <li><I.Check width={14} height={14} />Free to start</li>
+              <li><I.Check width={14} height={14} />Set up in two minutes</li>
+              <li><I.Check width={14} height={14} />Export or delete any time</li>
+            </ul>
 
-              <div className="float-stat float-stat-2">
-                <div className="fs-icon" style={{ color: '#d97706' }}>
-                  <I.Warn width={14} height={14} />
-                </div>
-                <div>
-                  <div className="fs-title">Interaction Detected</div>
-                  <div className="fs-sub">Review recommended</div>
-                </div>
-              </div>
-
-              <div className="float-stat float-stat-3">
-                <div className="fs-icon" style={{ color: '#047857' }}>
-                  <I.Activity width={14} height={14} />
-                </div>
-                <div>
-                  <div className="fs-title">Adherence This Week</div>
-                  <div className="fs-sub">91% — Great work</div>
-                </div>
-              </div>
-
-              {/* Hero visual card — shows a mock dashboard preview */}
-              <div className="hero-visual-card">
-                <div className="hero-visual-glow" />
-                <div className="hvc-header">
-                  <div className="hvc-dot hvc-dot--green" />
-                  <span className="hvc-title">Dashboard Preview</span>
-                </div>
-                <div className="hvc-content">
-                  <div className="hvc-stat-row">
-                    {[
-                      { label: 'Active Meds', value: '4', color: '#059669' },
-                      { label: 'Alerts', value: '2', color: '#d97706' },
-                      { label: 'Adherence', value: '91%', color: '#10b981' },
-                    ].map((s, i) => (
-                      <div key={i} className="hvc-stat" style={{ borderTopColor: s.color }}>
-                        <div className="hvc-stat-value" style={{ color: s.color }}>{s.value}</div>
-                        <div className="hvc-stat-label">{s.label}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="hvc-bar-chart">
-                    {[65, 80, 45, 90, 70, 85, 55].map((h, i) => (
-                      <div
-                        key={i}
-                        className="hvc-bar"
-                        style={{
-                          height: `${h}%`,
-                          animationDelay: `${0.8 + i * 0.1}s`,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="hvc-bar-labels">
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
-                      <span key={i}>{d}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────
-          STATS SECTION — Animated number counters
-          ─────────────────────────────────────────────────────────
-          Four large statistics that count up when scrolled into
-          view, creating an impressive visual effect. Each stat
-          has an icon, number, and label.
-       */}
-      <section className="lp-stats" ref={statsRef}>
-        <div className="lp-w stats-grid">
-          {[
-            { num: users, suf: '+', label: 'Active Patients', Icon: I.Users, c: '#059669' },
-            { num: meds, suf: '+', label: 'Medications Tracked', Icon: I.Pill, c: '#047857' },
-            { num: checks, suf: '+', label: 'Interactions Checked', Icon: I.Warn, c: '#10b981' },
-            { num: 99, suf: '.9%', label: 'Uptime Guarantee', Icon: I.Shield, c: '#059669' },
-          ].map((s, i) => (
-            <div
-              key={i}
-              className={`stat-card ${statsInView ? 'stat-in' : ''}`}
-              style={{ transitionDelay: `${i * 90}ms` }}
-            >
-              <div
-                className="stat-icon-wrap"
-                style={{ color: s.c, background: `${s.c}15` }}
-              >
-                <s.Icon width={20} height={20} />
-              </div>
-              <div className="stat-num" style={{ color: s.c }}>
-                {s.num.toLocaleString()}{s.suf}
-              </div>
-              <div className="stat-label">{s.label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ─────────────────────────────────────────────────────────
-          FEATURES SECTION — 6-item bento grid
-          ─────────────────────────────────────────────────────────
-          Displays the core product features in a visually striking
-          3×2 bento grid. Each tile has:
-          - Colored icon with tinted background
-          - Feature title
-          - Description text
-          - Hover glow effect
-          - Arrow that appears on hover
-       */}
-      <section className="lp-features" id="features" ref={featRef}>
-        <div className="lp-w">
-          {/* Section header — animates in when scrolled into view */}
-          <div className={`section-head ${featInView ? 'sh-visible' : ''}`}>
-            <div className="section-tag">
-              <span className="stag-sq" />
-              Features
-            </div>
-            <h2 className="section-h2">
-              Built for the real complexity of health
-            </h2>
-            <p className="section-p">
-              Not a simple reminder app. A complete system for managing multiple
-              medications, conditions, and providers without losing your mind.
+            <p className="hero-note a-in" style={{ '--d': '580ms' }}>
+              Information only. Not a substitute for medical advice.
             </p>
           </div>
 
-          {/* Feature tiles — staggered fade-in animation */}
-          <div className="feat-bento">
-            {FEATURES.map((f, i) => (
-              <div
-                key={i}
-                className={`feat-tile ${featInView ? 'ft-in' : ''}`}
-                style={{
-                  transitionDelay: `${i * 70}ms`,
-                  '--glow': f.glow,
-                }}
-              >
-                <div className="ft-glow-hover" />
-                <div
-                  className="ft-icon"
-                  style={{ color: f.color, background: `${f.color}18` }}
-                >
-                  <f.Icon width={22} height={22} />
+          <div className="hero-visual a-in a-in--card" style={{ '--d': '300ms' }}>
+            <div className="hero-card" aria-label="Example medication schedule">
+              <div className="hc-head">
+                <strong>Today's schedule</strong>
+                <span className="hc-count" key={takenCount}>{takenCount} of 2 taken</span>
+              </div>
+              <div className="hc-progress" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100}>
+                <span style={{ width: `${progress}%` }} />
+              </div>
+
+              <div className="hc-row">
+                <div>
+                  <div className="hc-name">Metformin 500mg</div>
+                  <div className="hc-meta">8:00 AM · With breakfast</div>
                 </div>
-                <h3 className="ft-title">{f.label}</h3>
-                <p className="ft-desc">{f.desc}</p>
-                <div className="ft-arr" style={{ color: f.color }}>
-                  <I.ChevR width={16} height={16} />
+                <span className="tag tag--ok"><I.Check width={11} height={11} />Taken</span>
+              </div>
+
+              <div className="hc-row">
+                <div>
+                  <div className="hc-name">Lisinopril 10mg</div>
+                  <div className="hc-meta">2:00 PM · With water</div>
+                </div>
+                {lisinoprilTaken ? (
+                  <span className="tag tag--ok tag--pop" key="taken"><I.Check width={11} height={11} />Taken</span>
+                ) : (
+                  <span className="tag tag--due tag--pop" key="due"><span className="due-dot" />Due</span>
+                )}
+              </div>
+
+              <div className="hc-alert">
+                <I.Warn width={18} height={18} />
+                <div>
+                  <div className="hc-alert-title">Major interaction</div>
+                  <div className="hc-alert-text">Warfarin + Ibuprofen may raise bleeding risk. Ask your pharmacist.</div>
                 </div>
               </div>
+            </div>
+            <span className="hero-chip hero-chip--a"><I.Bell width={14} height={14} />Reminder sent</span>
+            <span className="hero-chip hero-chip--b"><I.Shield width={14} height={14} />Safety check passed</span>
+          </div>
+        </div>
+
+        {/* Capability strip */}
+        <div className="lp-w">
+          <ul className="cap-strip" data-reveal>
+            {CAPABILITIES.map(({ Icon, label }) => (
+              <li key={label}><Icon width={18} height={18} />{label}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* ───────────── FEATURES ───────────── */}
+      <section className="lp-section" id="features">
+        <div className="lp-w">
+          <span className="eyebrow" data-reveal>Features</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>Everything you need to stay on track</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            Medicine Cabinet covers the whole routine, from the first prescription to the
+            conversation with your doctor, so nothing depends on memory.
+          </p>
+
+          <div className="feat-grid">
+            {FEATURES.map(({ Icon, title, desc }, i) => (
+              <article
+                key={title}
+                className="feat-card"
+                data-reveal
+                style={{ '--d': `${(i % 4) * 90}ms` }}
+                onMouseMove={trackPointer}
+              >
+                <span className="feat-icon"><Icon width={22} height={22} /></span>
+                <h3>{title}</h3>
+                <p>{desc}</p>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────────────────
-          DASHBOARD SHOWCASE — Product preview section
-          ─────────────────────────────────────────────────────────
-          A split-layout section with feature bullets on the left
-          and a browser mockup showing the dashboard on the right.
-          Uses a darker green background for contrast.
-       */}
-      <section className="lp-showcase">
-        <div className="showcase-inner lp-w">
-          {/* Left side: text content and feature list */}
-          <div className="showcase-text">
-            <div className="section-tag section-tag--light">
-              <span className="stag-sq" />
-              Your Dashboard
-            </div>
-            <h2 className="showcase-h2">
-              Everything visible.<br />Nothing left to chance.
-            </h2>
-            <p className="showcase-p">
-              See every medication, every interaction risk, and your full
-              adherence history — all in one view designed for clarity,
-              not complexity.
-            </p>
-            {/* Checklist of key dashboard capabilities */}
-            <ul className="showcase-list">
-              {[
-                'Full medication history in one place',
-                'Color-coded interaction severity levels',
-                'Symptom-to-medication correlation engine',
-                'Adherence tracking updated in real time',
-              ].map((t, i) => (
-                <li key={i} className="showcase-li">
-                  <span className="sli-check">
-                    <I.Check width={12} height={12} />
-                  </span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-            <button className="showcase-btn" onClick={openRegister}>
-              Open Your Dashboard
-              <I.Arrow width={15} height={15} />
-            </button>
-          </div>
+      {/* ───────────── PRODUCT SHOWCASE ───────────── */}
+      <section className="lp-section lp-section--tint" id="product">
+        <div className="lp-w">
+          <span className="eyebrow" data-reveal>Product tour</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>See it in action</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            A closer look at the four screens you will use every day. Example data shown for illustration.
+          </p>
 
-          {/* Right side: browser frame mockup with stats */}
-          <div className="showcase-visual">
-            <div className="showcase-glow-ring" />
-            <div className="browser-frame">
-              <div className="browser-bar">
-                <div className="browser-dots">
-                  <span /><span /><span />
-                </div>
-                <div className="browser-url">
-                  dashboard.medicinecabinet.app
+          <div className="showcase" data-reveal>
+            <div className="sc-tabs" role="tablist">
+              {SHOWCASE.map((s, i) => (
+                <button
+                  key={s.id}
+                  role="tab"
+                  aria-selected={tab === i}
+                  className={`sc-tab ${tab === i ? 'is-on' : ''}`}
+                  onClick={() => pickTab(i)}
+                >
+                  <span className="sc-tab-icon"><s.Icon width={20} height={20} /></span>
+                  <span className="sc-tab-copy">
+                    <strong>{s.title}</strong>
+                    <span>{s.desc}</span>
+                  </span>
+                  {tab === i && !tabPaused && <span className="sc-timer" key={`t-${tab}`} />}
+                </button>
+              ))}
+            </div>
+
+            <div className="sc-stage">
+              <div className="sc-window">
+                <div className="sc-bar" aria-hidden="true"><i /><i /><i /><span>medicinecabinet.app</span></div>
+                <div className="sc-body" key={SHOWCASE[tab].id}>
+                  <ShowcasePanel id={SHOWCASE[tab].id} />
                 </div>
               </div>
-              {/* Mock dashboard content instead of an image */}
-              <div className="browser-mock-content">
-                <div className="bmc-greeting">Good evening, John 👋</div>
-                <div className="bmc-cards">
-                  {[
-                    { label: 'Active Meds', val: '4', color: '#059669' },
-                    { label: 'Alerts', val: '2', color: '#d97706' },
-                    { label: 'Side Effects', val: '4', color: '#10b981' },
-                    { label: 'Reports', val: '1', color: '#047857' },
-                  ].map((c, i) => (
-                    <div key={i} className="bmc-card" style={{ borderTopColor: c.color }}>
-                      <div className="bmc-val" style={{ color: c.color }}>{c.val}</div>
-                      <div className="bmc-label">{c.label}</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── DEEP DIVES ───────────── */}
+      <section className="lp-section">
+        <div className="lp-w">
+          <div className="dive" data-reveal>
+            <div className="dive-copy">
+              <span className="eyebrow">Interaction checker</span>
+              <h3>Know about a problem before it becomes one</h3>
+              <p>
+                Adding a new prescription, an over-the-counter painkiller or a supplement?
+                Medicine Cabinet compares it against everything you already take and tells
+                you straight away if the combination needs attention.
+              </p>
+              <ul className="ticks">
+                <li><I.Check width={14} height={14} />Three severity levels: major, moderate and minor</li>
+                <li><I.Check width={14} height={14} />Plain-language explanations, not medical jargon</li>
+                <li><I.Check width={14} height={14} />A clear suggested next step for every alert</li>
+              </ul>
+            </div>
+            <div className="dive-visual">
+              <div className="sp sp--card">
+                {ALERTS.map((a) => (
+                  <div className={`alert-row alert-row--${a.level}`} key={a.pair}>
+                    <span className="alert-badge">{a.label}</span>
+                    <div>
+                      <div className="alert-pair">{a.pair}</div>
+                      <div className="alert-text">{a.text}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="dive dive--flip" data-reveal>
+            <div className="dive-copy">
+              <span className="eyebrow">Side effects and patterns</span>
+              <h3>Turn "I think it started last week" into facts</h3>
+              <p>
+                Log a symptom in a few seconds with its severity and when it happened. Over
+                time you will see how symptoms line up with doses and medication changes,
+                which gives your doctor something concrete to work with.
+              </p>
+              <ul className="ticks">
+                <li><I.Check width={14} height={14} />Quick daily logging with severity ratings</li>
+                <li><I.Check width={14} height={14} />Weekly charts that show how symptoms change</li>
+                <li><I.Check width={14} height={14} />Linked to the medications you were taking at the time</li>
+              </ul>
+            </div>
+            <div className="dive-visual">
+              <div className="sp sp--card">
+                <div className="sp-head"><strong>Symptom severity · last 7 days</strong><span>Headache</span></div>
+                <div className="bars">
+                  {EFFECT_DAYS.map((b, i) => (
+                    <div className="bar-col" key={b.d}>
+                      <span className="bar" style={{ '--h': `${b.v}%`, '--i': i }} />
+                      <span className="bar-l">{b.d}</span>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* ─────────────────────────────────────────────────────────
-          HOW IT WORKS — 4-step process
-          ─────────────────────────────────────────────────────────
-          A simple 4-step guide showing users how easy it is to
-          get started. Each step has a large gradient number,
-          title, and description. A connecting line runs across
-          the top to suggest progression.
-       */}
-      <section className="lp-how" id="how" ref={howRef}>
-        <div className="lp-w">
-          <div className={`section-head ${howInView ? 'sh-visible' : ''}`}>
-            <div className="section-tag">
-              <span className="stag-sq" />
-              How It Works
+          <div className="dive" data-reveal>
+            <div className="dive-copy">
+              <span className="eyebrow">Doctor reports</span>
+              <h3>Make every appointment count</h3>
+              <p>
+                Short appointments are easy to waste trying to remember what you take and
+                how you have been. Generate one clean summary, print it or save it as a
+                PDF, and hand your clinician the full picture in seconds.
+              </p>
+              <ul className="ticks">
+                <li><I.Check width={14} height={14} />Medications, doses and schedules in one view</li>
+                <li><I.Check width={14} height={14} />Allergies, side effects and adherence included</li>
+                <li><I.Check width={14} height={14} />Ready to print or save with a single click</li>
+              </ul>
             </div>
-            <h2 className="section-h2">Up and running in 5 minutes</h2>
-            <p className="section-p">
-              No complicated onboarding. No confusing flows. Add your
-              medications and you're immediately in control.
-            </p>
-          </div>
-          <div className="how-grid">
-            {HOW.map((s, i) => (
-              <div
-                key={i}
-                className={`how-card ${howInView ? 'hc-in' : ''}`}
-                style={{ transitionDelay: `${i * 100}ms` }}
-              >
-                <div className="how-num">{s.n}</div>
-                <h3 className="how-title">{s.title}</h3>
-                <p className="how-desc">{s.desc}</p>
+            <div className="dive-visual">
+              <div className="sp sp--card sp-report">
+                <div className="doc">
+                  <div className="doc-title">Medication summary</div>
+                  <div className="doc-sub">Prepared for your appointment</div>
+                  <div className="doc-line doc-line--h">Current medications</div>
+                  <div className="doc-line">Metformin 500mg · twice daily</div>
+                  <div className="doc-line">Lisinopril 10mg · once daily</div>
+                  <div className="doc-line doc-line--h">Adherence · last 30 days</div>
+                  <div className="doc-line">91% of doses taken on time</div>
+                </div>
+                <span className="doc-btn"><I.Download width={14} height={14} />Save as PDF</span>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────────────────
-          TESTIMONIALS — User reviews section
-          ─────────────────────────────────────────────────────────
-          Three review cards from different user types (patient,
-          doctor, caregiver) to demonstrate broad appeal. Each
-          card has star ratings, quoted text, and author info.
-       */}
-      <section className="lp-reviews" id="reviews" ref={testRef}>
+      {/* ───────────── AUDIENCE ───────────── */}
+      <section className="lp-section lp-section--white" id="audience">
         <div className="lp-w">
-          <div className={`section-head sh-light ${testInView ? 'sh-visible' : ''}`}>
-            <div className="section-tag section-tag--light">
-              <span className="stag-sq" />
-              Reviews
-            </div>
-            <h2 className="section-h2 sh2-light">
-              Trusted by patients, caregivers & doctors
-            </h2>
-          </div>
-          <div className="reviews-grid">
-            {TESTIMONIALS.map((t, i) => (
-              <div
-                key={i}
-                className={`review-card ${testInView ? 'rc-in' : ''}`}
-                style={{ transitionDelay: `${i * 100}ms`, '--rc-color': t.color }}
-              >
-                <div className="rc-top-bar" style={{ background: t.color }} />
-                <div className="rc-stars">
-                  {Array(t.rating).fill(0).map((_, si) => (
-                    <I.Star key={si} width={13} height={13} style={{ color: '#f59e0b' }} />
+          <span className="eyebrow" data-reveal>Who it's for</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>Made for everyone involved in your care</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            Medication safety is a team effort. Medicine Cabinet gives each person what they need.
+          </p>
+
+          <div className="aud-grid">
+            {AUDIENCE.map(({ Icon, who, tag, points }, i) => (
+              <article key={who} className="aud-card" data-reveal style={{ '--d': `${i * 110}ms` }}>
+                <span className="aud-icon"><Icon width={26} height={26} /></span>
+                <h3>{who}</h3>
+                <span className="aud-tag">{tag}</span>
+                <ul>
+                  {points.map((p) => (
+                    <li key={p}><I.Check width={14} height={14} />{p}</li>
                   ))}
-                </div>
-                <p className="rc-quote">"{t.text}"</p>
-                <div className="rc-author">
-                  <div
-                    className="rc-avatar"
-                    style={{ background: `linear-gradient(135deg, ${t.color}, #064e3b)` }}
-                  >
-                    {t.name[0]}
-                  </div>
-                  <div>
-                    <div className="rc-name">{t.name}</div>
-                    <div className="rc-role">{t.role}</div>
-                  </div>
-                </div>
+                </ul>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── HOW IT WORKS ───────────── */}
+      <section className="lp-section" id="how">
+        <div className="lp-w">
+          <span className="eyebrow" data-reveal>How it works</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>Up and running in four steps</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            No lengthy setup, no training. Most people are tracking within minutes.
+          </p>
+
+          <div className="steps-grid">
+            <span className="steps-line" data-reveal aria-hidden="true" />
+            {STEPS.map((s, i) => (
+              <div key={s.title} className="step" data-reveal style={{ '--d': `${150 + i * 130}ms` }}>
+                <span className="step-n">{i + 1}</span>
+                <h3>{s.title}</h3>
+                <p>{s.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────────────────
-          FINAL CTA — Last call-to-action before footer
-          ─────────────────────────────────────────────────────────
-          A large, centered CTA section with glowing background
-          effects. Designed to capture users who scrolled through
-          the entire page.
-       */}
-      <section className="lp-cta" ref={ctaRef}>
+      {/* ───────────── SECURITY ───────────── */}
+      <section className="lp-section lp-section--tight" id="security">
         <div className="lp-w">
-          <div className={`cta-box ${ctaInView ? 'cta-in' : ''}`}>
-            <div className="cta-glow-1" />
-            <div className="cta-glow-2" />
-            <div className="section-tag" style={{ marginBottom: '16px' }}>
-              <span className="stag-sq" />
-              Get Started Today
+          <div className="privacy-panel" data-reveal>
+            <span className="pp-glow" aria-hidden="true" />
+            <div className="pp-top">
+              <span className="eyebrow eyebrow--light">Security and privacy</span>
+              <h2>Your health data stays yours</h2>
+              <p>
+                Medicine Cabinet treats everything as sensitive. You decide what is stored,
+                who can see it, and you can export or delete all of it in one click.
+              </p>
             </div>
-            <h2 className="cta-h2">Take control of your health.</h2>
-            <p className="cta-p">
-              Free forever for individuals. No credit card, no commitments —
-              just clarity over every medication you take.
-            </p>
-            <button
-              id="cta-final"
-              className="cta-main-btn"
-              onClick={openRegister}
-            >
-              Start Free — No Card Needed
-              <I.Arrow width={16} height={16} />
-            </button>
-            <div className="cta-trust">
-              {['10,000+ users', 'No credit card', 'Cancel anytime', 'Free forever'].map((t, i) => (
-                <span key={i} className="cta-chip">
-                  <I.Check width={11} height={11} />
-                  {t}
-                </span>
+            <ul className="pp-grid">
+              {SECURITY.map(({ Icon, title, desc }, i) => (
+                <li key={title} className="pp-item" style={{ '--d': `${250 + i * 90}ms` }}>
+                  <span className="pp-check"><Icon width={18} height={18} /></span>
+                  <div>
+                    <strong>{title}</strong>
+                    <span>{desc}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── COMPARISON ───────────── */}
+      <section className="lp-section lp-section--white">
+        <div className="lp-w lp-w--narrow">
+          <span className="eyebrow" data-reveal>Why Medicine Cabinet</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>More than a list on the fridge</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            Paper and notes apps store information. Medicine Cabinet helps you act on it.
+          </p>
+
+          <div className="cmp" data-reveal>
+            <div className="cmp-row cmp-row--head">
+              <span />
+              {COMPARE_COLS.map((c, i) => (
+                <span key={c} className={i === 2 ? 'cmp-us' : ''}>{c}</span>
               ))}
             </div>
+            {COMPARE_ROWS.map((r) => (
+              <div className="cmp-row" key={r.label}>
+                <span className="cmp-label">{r.label}</span>
+                {r.v.map((yes, i) => (
+                  <span key={i} className={`cmp-cell ${i === 2 ? 'cmp-us' : ''}`}>
+                    {yes
+                      ? <span className="cmp-yes"><I.Check width={13} height={13} /></span>
+                      : <span className="cmp-no"><I.Cross width={12} height={12} /></span>}
+                  </span>
+                ))}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ─────────────────────────────────────────────────────────
-          FOOTER — Bottom navigation and legal info
-       */}
+      {/* ───────────── FAQ ───────────── */}
+      <section className="lp-section" id="faq">
+        <div className="lp-w lp-w--narrow">
+          <span className="eyebrow" data-reveal>FAQ</span>
+          <h2 className="sec-h2" data-reveal style={{ '--d': '60ms' }}>Questions, answered</h2>
+          <p className="sec-sub" data-reveal style={{ '--d': '120ms' }}>
+            Still unsure about something? Start with these.
+          </p>
+
+          <div className="faq" data-reveal>
+            {FAQ.map((f, i) => {
+              const open = openFaq === i;
+              return (
+                <div key={f.q} className={`faq-item ${open ? 'is-open' : ''}`}>
+                  <button
+                    className="faq-q"
+                    aria-expanded={open}
+                    onClick={() => setOpenFaq(open ? -1 : i)}
+                  >
+                    <span>{f.q}</span>
+                    <span className="faq-plus"><I.Plus width={16} height={16} /></span>
+                  </button>
+                  <div className="faq-a"><div><p>{f.a}</p></div></div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── FINAL CTA ───────────── */}
+      <section className="lp-cta">
+        <div className="lp-w">
+          <div className="cta-card" data-reveal>
+            <span className="cta-glow" aria-hidden="true" />
+            <h2>Ready to organise your cabinet?</h2>
+            <p>Free to start. Takes about two minutes. Your first safety check is moments away.</p>
+            <div className="cta-actions">
+              <button id="cta-final" className="btn-primary btn-primary--lg btn-primary--light" onClick={openRegister}>
+                Create your account
+                <I.Arrow width={18} height={18} />
+              </button>
+              <button className="btn-ghost-light" onClick={openLogin}>I already have an account</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────── FOOTER ───────────── */}
       <footer className="lp-footer">
         <div className="lp-w">
-          <div className="footer-row">
-            <div className="lp-logo">
-              <div className="logo-pill-icon">
-                <I.Pill width={15} height={15} />
+          <div className="foot-grid">
+            <div className="foot-brand">
+              <a className="lp-logo" href="#top">
+                <span className="logo-pill-icon"><I.Pill width={18} height={18} /></span>
+                <span className="logo-text">Medicine Cabinet</span>
+              </a>
+              <p>One safe place for every medication, interaction check and doctor summary.</p>
+            </div>
+            {FOOTER_COLS.map((c) => (
+              <div key={c.title} className="foot-col">
+                <h4>{c.title}</h4>
+                {c.links.map(([label, href]) => (
+                  <a key={label} href={href}>{label}</a>
+                ))}
               </div>
-              <span className="logo-text">
-                Medicine<em>Cabinet</em>
-              </span>
-            </div>
-            <div className="footer-links">
-              {['Privacy Policy', 'Terms of Service', 'Contact Us', 'Help Center'].map((l) => (
-                <a key={l} href="#">{l}</a>
-              ))}
-            </div>
+            ))}
           </div>
-          <div className="footer-bottom">
-            © 2024 Medicine Cabinet — Not a substitute for professional
-            medical advice. Always consult a qualified healthcare provider.
+
+          <div className="foot-bottom" id="disclaimer">
+            <span>© 2026 Medicine Cabinet. All rights reserved.</span>
+            <span className="footer-disclaimer">
+              Medical disclaimer: Medicine Cabinet is an informational tool and is not a doctor
+              or pharmacist. It does not provide medical advice. Always check with a qualified
+              clinician before starting, stopping or changing any medication.
+            </span>
           </div>
         </div>
       </footer>
 
-      {/* ─────────────────────────────────────────────────────────
-          LOGIN MODAL — Overlay authentication dialog
-          ─────────────────────────────────────────────────────────
-          A centered modal that appears when users click Sign In
-          or Get Started. Supports both login and registration
-          modes with a tabbed interface. Clicking the backdrop
-          closes the modal.
-       */}
-      {showLoginModal && (
-        <div className="login-modal-overlay" onClick={() => setShowLoginModal(false)}>
-          <div className="login-modal" onClick={(e) => e.stopPropagation()}>
-            {/* Close button */}
-            <button
-              className="login-modal-close"
-              onClick={() => setShowLoginModal(false)}
-              aria-label="Close login"
-            >
-              ✕
-            </button>
-
-            {/* Modal glow decoration */}
+      {/* ───────────── AUTH MODAL ───────────── */}
+      {showModal && (
+        <div className="login-modal-overlay" onClick={() => setShowModal(false)}>
+          <div
+            className="login-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={authMode === 'login' ? 'Sign in' : 'Create account'}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button className="login-modal-close" onClick={() => setShowModal(false)} aria-label="Close login">✕</button>
             <div className="login-modal-glow" />
 
-            {/* Logo at top of modal */}
             <div className="login-modal-logo">
-              <div className="logo-pill-icon">
-                <I.Pill width={16} height={16} />
-              </div>
-              <span className="logo-text">
-                Medicine<em>Cabinet</em>
-              </span>
+              <span className="logo-pill-icon"><I.Pill width={16} height={16} /></span>
+              <span className="logo-text">Medicine Cabinet</span>
             </div>
 
-            {/* Auth mode tabs — switch between Sign In and Register */}
             <div className="auth-tabs">
-              <button
-                id="tab-login"
-                className={`auth-tab ${authMode === 'login' ? 'act' : ''}`}
-                onClick={() => setAuthMode('login')}
-              >
-                Sign In
-              </button>
-              <button
-                id="tab-register"
-                className={`auth-tab ${authMode === 'register' ? 'act' : ''}`}
-                onClick={() => setAuthMode('register')}
-              >
-                Register
-              </button>
+              <button id="tab-login" className={`auth-tab ${authMode === 'login' ? 'act' : ''}`} onClick={() => setAuthMode('login')}>Sign In</button>
+              <button id="tab-register" className={`auth-tab ${authMode === 'register' ? 'act' : ''}`} onClick={() => setAuthMode('register')}>Register</button>
             </div>
 
-            {/* Authentication form */}
             <form className="auth-form" onSubmit={submit}>
-              {/* Name field — only shown in register mode */}
               {authMode === 'register' && (
                 <div className="af">
                   <label htmlFor="f-name">Full Name</label>
-                  <input
-                    id="f-name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                  />
+                  <input id="f-name" type="text" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
               )}
-
-              {/* Email field */}
               <div className="af">
                 <label htmlFor="f-email">Email</label>
-                <input
-                  id="f-email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
+                <input id="f-email" type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
               </div>
-
-              {/* Password field */}
               <div className="af">
                 <label htmlFor="f-pass">Password</label>
-                <input
-                  id="f-pass"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+                <input id="f-pass" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
               </div>
+              {authMode === 'login' && <a href="#" className="af-forgot">Forgot password?</a>}
 
-              {/* Forgot password link — only in login mode */}
-              {authMode === 'login' && (
-                <a href="#" className="af-forgot">Forgot password?</a>
-              )}
-
-              {/* Submit button */}
               <button id="auth-submit" type="submit" className="auth-submit-btn">
                 {authMode === 'login' ? 'Sign In to Dashboard' : 'Create Free Account'}
                 <I.Arrow width={15} height={15} />
               </button>
 
-              {/* Social login divider */}
               <div className="af-divider"><span>or continue with</span></div>
 
-              {/* Google OAuth button */}
               <button type="button" id="btn-google" className="auth-google-btn">
-                <svg width="17" height="17" viewBox="0 0 24 24">
+                <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -1193,10 +884,9 @@ const LandingPage = ({ onLogin }) => {
               </button>
             </form>
 
-            {/* Legal terms */}
             <p className="auth-terms">
-              By signing up you agree to our <a href="#">Terms</a> &{' '}
-              <a href="#">Privacy Policy</a>. Your data is encrypted and never sold.
+              By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a>.
+              Your data is encrypted and never sold.
             </p>
           </div>
         </div>
