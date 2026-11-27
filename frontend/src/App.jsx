@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { ThemeContext } from './context/ThemeContext';
+import { useState } from 'react';
 import { AppContext } from './context/AppContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
@@ -14,7 +13,6 @@ import Toast from './components/Toast';
 import './App.css';
 
 function App() {
-  const [theme, setTheme] = useState('dark');
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -81,10 +79,6 @@ function App() {
     { id: 4, date: '2024-06-18', symptom: 'Headache', severity: 2, linkedMeds: [2], notes: '' },
   ]);
 
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
-
   const addToast = (message, type = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, message, type }]);
@@ -93,20 +87,12 @@ function App() {
     }, 3500);
   };
 
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
   const appContextValue = {
     medications, setMedications,
     sideEffects, setSideEffects,
     activePage, setActivePage,
     sidebarOpen, setSidebarOpen,
     addToast,
-  };
-
-  const themeContextValue = {
-    theme, toggleTheme,
   };
 
   const renderPage = () => {
@@ -123,30 +109,26 @@ function App() {
 
   if (!isLoggedIn) {
     return (
-      <ThemeContext.Provider value={themeContextValue}>
-        <AppContext.Provider value={appContextValue}>
-          <LandingPage onLogin={() => setIsLoggedIn(true)} />
-          <Toast toasts={toasts} />
-        </AppContext.Provider>
-      </ThemeContext.Provider>
+      <AppContext.Provider value={appContextValue}>
+        <LandingPage onLogin={() => setIsLoggedIn(true)} />
+        <Toast toasts={toasts} />
+      </AppContext.Provider>
     );
   }
 
   return (
-    <ThemeContext.Provider value={themeContextValue}>
-      <AppContext.Provider value={appContextValue}>
-        <div className="app-layout">
-          <Sidebar />
-          <div className={`app-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
-            <Navbar onLogout={() => setIsLoggedIn(false)} />
-            <main className="app-content">
-              {renderPage()}
-            </main>
-          </div>
+    <AppContext.Provider value={appContextValue}>
+      <div className="app-layout">
+        <Sidebar />
+        <div className={`app-main ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+          <Navbar onLogout={() => setIsLoggedIn(false)} />
+          <main className="app-content">
+            {renderPage()}
+          </main>
         </div>
-        <Toast toasts={toasts} />
-      </AppContext.Provider>
-    </ThemeContext.Provider>
+      </div>
+      <Toast toasts={toasts} />
+    </AppContext.Provider>
   );
 }
 
