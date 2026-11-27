@@ -286,7 +286,7 @@ const ShowcasePanel = ({ id }) => {
 /* ═══════════════════════════════════════════════════════════════
    PAGE
    ═══════════════════════════════════════════════════════════════ */
-const LandingPage = ({ onLogin }) => {
+const LandingPage = ({ onLogin, onSignIn }) => {
   const rootRef = useRef(null);
 
   const [showModal, setShowModal] = useState(false);
@@ -338,7 +338,7 @@ const LandingPage = ({ onLogin }) => {
     return () => window.removeEventListener('keydown', onKey);
   }, [showModal]);
 
-  const openLogin = () => { setAuthMode('login'); setShowModal(true); };
+  const openLogin = () => onSignIn();
   const openRegister = () => { setAuthMode('register'); setShowModal(true); };
   const submit = (e) => { e.preventDefault(); onLogin(); };
   const pickTab = (i) => { setTab(i); setTabPaused(true); };

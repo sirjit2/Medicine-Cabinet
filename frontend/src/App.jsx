@@ -9,11 +9,13 @@ import SideEffects from './pages/SideEffects';
 import Timeline from './pages/Timeline';
 import Reports from './pages/Reports';
 import LandingPage from './pages/LandingPage';
+import SignIn from './pages/auth/SignIn';
 import Toast from './components/Toast';
 import './App.css';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authView, setAuthView] = useState('landing'); // 'landing' | 'login'
   const [activePage, setActivePage] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [toasts, setToasts] = useState([]);
@@ -110,7 +112,18 @@ function App() {
   if (!isLoggedIn) {
     return (
       <AppContext.Provider value={appContextValue}>
-        <LandingPage onLogin={() => setIsLoggedIn(true)} />
+        {authView === 'login' ? (
+          <SignIn
+            onSuccess={() => { setIsLoggedIn(true); setAuthView('landing'); }}
+            onBack={() => setAuthView('landing')}
+            onSwitch={() => setAuthView('landing')}
+          />
+        ) : (
+          <LandingPage
+            onLogin={() => setIsLoggedIn(true)}
+            onSignIn={() => setAuthView('login')}
+          />
+        )}
         <Toast toasts={toasts} />
       </AppContext.Provider>
     );
